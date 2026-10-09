@@ -1,0 +1,30 @@
+1) Zapoznanie się z funkcją systemową sbrk()
+
+    Sterta rośnię w strone wyzszych adresow pamieci. W praktyce sbrk() przesuwa wskaznik konca sterty, zwany program break
+    Granice sterty wyznacza wlasnie program break.
+
+2) Zaprojektowanie struktury nagłówka (metadane)
+    Po co w ogóle jest ten nagłówek? Nagłówek jest po to aby funckja free() miała informacje na temat ile
+    bajtów pamięci ma zwolnić. Ponieważ funkcja free() przyjmuje jako argument tylko adres w pamieci, nie wie
+    jaki obszar pamieci ma zwolnic.
+
+3) Implementacja i poprawka funkcji w momencie kiedy uzytkownik uzyje free().
+    Kiedy uzytkownik uzywa free() zwalniana jest pamiec, trzeba wziac to pod uwage, i dodac do funkcji przechodzenie
+    przez kazde wezly i sprawdzanie czy jest wolne i czy rozmiar ktory zostal zwolniony jest wiekszy / równy
+    rozmiarowi ktory uzytkownik chce zaalokowac.
+
+4) Wyrównanie pamięci (Memory Alignment)
+    Procesor przetwarza dane najlepiej jesli daje sie mu dane w paczkach, ktore sa wieloktrotnoscia 8. Moj malloc
+    powinien zaokraglac np. 12 bajtow do 16 bajtow pamieci. Ale w pamięci RAM jest alokowane ilosc bajtow ktora chce uztkownik + metadane
+    !! Maska na bity, każda wielokrotność 8 w zapisie binarnym to jedynka 1 reszta 0, 1000 (8), 10000 (16)
+
+
+5) Dzielenie blokow (Splitting)
+Problem polega na gigantycznym marnotrawstwie pamięci. Jeśli użytkownik poprosi o 16 bajtów,
+ a Twoja pętla znajdzie stary, wolny blok o rozmiarze 4000 bajtów, obecnie oddajesz mu całą tę przestrzeń.
+ Z perspektywy systemu 3984 bajty zostają całkowicie zamrożone i nikt inny nie może ich użyć,
+ dopóki ten jeden konkretny wskaźnik nie zostanie zwolniony.
+
+
+
+
