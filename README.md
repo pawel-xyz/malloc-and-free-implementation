@@ -6,8 +6,7 @@ A custom implementation of the standard C library memory allocation functions (`
 
 * [Understanding Computer Memory](#Understanding-computer-memory)
   * [What are `malloc` and `free`?](#what-are-malloc-and-free)
-* [How It Works](#how-it-works)
-  * [The Singly Linked List Architecture](#the-singly-linked-list-architecture)
+* [Memory Implementation as a Singly Linked List](#memory-implementation-as-a-singly-linked-list)
   * [Allocation (`my_malloc`)](#allocation-my_malloc)
   * [Deallocation (`my_free`)](#deallocation-my_free)
 * [Key Helper Functions](#Key-helper-functions)
@@ -35,6 +34,12 @@ malloc() and free() are basic C functions used by a programmer to both manually 
 
 ### *The structure of malloc() and free()`* : 
 * `void* malloc( size_t size );`
- * void* means that `malloc()` returns pointer to void. That makes perfect sense because the only job of `malloc()` function is to retrieve a specified number of bytes from the operating system and reserve them in memory. This function does not know WHAT type of data is stored at that address. Let's assume that `malloc()` doesn't return void*. The people who created C would have to create special `malloc()` functions for every data type (e.g. `int* malloc_int(size_t size)`).
-  * size_t is a special data type (size_t, "size" it's just a variable name) used to represent object size in bytes. A memory size can never be negative. For this reason, `size_t` is an unsigned integer type (it does not accept values ​​less than zero). This allows the available range of bits to be fully utilized for specifying memory size. The other very important thing is that size_t is platform dependent which means that on 32-bit systems it's size is 32 bits (4 bytes) and on 64-bit systems it's 64 bits (8 bytes)
+  
+-> `void*` means that `malloc()` returns pointer to void. That makes perfect sense because the only job of `malloc()` function is to retrieve a specified number of bytes from the operating system and reserve them in memory. This function does not know WHAT type of data is stored at that address. Let's assume that `malloc()` doesn't return void*. The people who created C would have to create special `malloc()` functions for every data type (e.g. `int* malloc_int(size_t size)`).
+-> `size_t` is a special data type (size_t, "size" it's just a variable name) used to represent object size in bytes. A memory size can never be negative. For this reason, `size_t` is an unsigned integer type (it does not accept values ​​less than zero). This allows the available range of bits to be fully utilized for specifying memory size. The other very important thing is that size_t is platform dependent which means that on 32-bit systems it's size is 32 bits (4 bytes) and on 64-bit systems it's 64 bits (8 bytes).
+
+* `void free( void* ptr );` This function is pretty simple, it doesn't return anything (void) and takes one argument - a pointer to a previously allocated memory. Notice how `ptr` only stores address of memory that we want to free, however it doesn't include information of HOW many bytes are allocated meaning that it "technically" shouldn't be able to free the right amount. We will cover this in section :[Memory Implementation as a Singly Linked List](#memory-implementation-as-a-singly-linked-list)
+
+# *Memory Implementation as a Singly Linked List*
+Now that we know what is a heap let's try to implem
 
