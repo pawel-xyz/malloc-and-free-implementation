@@ -3,8 +3,8 @@ project(My_Malloc)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(My_Malloc main.c
-        defs.h
-        functions.c
+add_executable(My_Malloc
         main.c
-        func.c)
+        defs.h
+        func.c
+        testing_mymalloc.c)

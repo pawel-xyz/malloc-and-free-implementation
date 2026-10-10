@@ -1,9 +1,8 @@
 #include "defs.h"
-
+Mem_Block* heap_start = NULL;
 
 
 void* my_malloc(size_t size){
-
 
        if (heap_start == NULL) {
            // Incrementing the heap :
@@ -27,6 +26,7 @@ void* my_malloc(size_t size){
        }
 
     Mem_Block* current = heap_start;
+    Mem_Block* findlast = NULL;
 
     while( current != NULL) {
 
@@ -38,6 +38,7 @@ void* my_malloc(size_t size){
 
             return current + 1;
         }
+        findlast = current;
         current = current->pNext;
     }
 
@@ -46,6 +47,7 @@ void* my_malloc(size_t size){
     current->Size_Alloc = AlignBytes(size);
     current->isFree = 0;
     current->pNext = NULL;
+    findlast->pNext = current;
 
     return current + 1;
 }
@@ -57,30 +59,11 @@ void my_free(void* ptr) {
         return;
     }
 
+   CheckRightNeighbour(ptr);
+   CheckLeftNeighbour(ptr);
+
     Mem_Block* ChunkToFree = (Mem_Block*)ptr - 1;
-
     ChunkToFree->isFree = 1;
-
-
-    // Checking if the right neighbour is available for use
-    Mem_Block* Right_Neighbour = ChunkToFree->pNext;
-    if( Right_Neighbour->isFree == 1) {
-
-        ChunkToFree->Size_Alloc = ChunkToFree->Size_Alloc + Right_Neighbour->Size_Alloc + HEADER_SIZE;
-        ChunkToFree->pNext = Right_Neighbour->pNext;
-        return;
-    }
-
-    // Checking if the left neighbour is available for use
-    Mem_Block* Left_Neighbour = heap_start;
-    while (Left_Neighbour != NULL) {
-        if (Left_Neighbour->pNext == ChunkToFree && Left_Neighbour->isFree == 1 && ChunkToFree->isFree == 1) {
-            Left_Neighbour->Size_Alloc = Left_Neighbour->Size_Alloc + ChunkToFree->Size_Alloc + HEADER_SIZE;
-            Left_Neighbour->pNext = ChunkToFree->pNext;
-            return;
-        }
-        Left_Neighbour = Left_Neighbour->pNext;
-    }
 }
 
 size_t AlignBytes( size_t size ) {
@@ -99,7 +82,7 @@ size_t AlignBytes( size_t size ) {
     return size;
     */
 
-    // The 'bit-masking' way
+    // The 'bit-masking' way :
     return ~(MIN_MULTIPLE-1) & size + MIN_MULTIPLE-1;
 }
 
@@ -116,4 +99,38 @@ void Block_Splitting(size_t size, Mem_Block* BlockFound) {
     BlockFound->Size_Alloc = size;
     SplitBlock->Size_Alloc = AvailableBytes;
     SplitBlock->isFree = 1;
+}
+
+
+
+void CheckRightNeighbour(void* ptr) {
+
+    Mem_Block* ChunkToFree = (Mem_Block*)ptr - 1;
+    ChunkToFree->isFree = 1;
+
+    // Checking if the right neighbour is available for use
+    Mem_Block* Right_Neighbour = ChunkToFree->pNext;
+    if( Right_Neighbour->isFree == 1) {
+
+        ChunkToFree->Size_Alloc = ChunkToFree->Size_Alloc + Right_Neighbour->Size_Alloc + HEADER_SIZE;
+        ChunkToFree->pNext = Right_Neighbour->pNext;
+    }
+}
+
+void CheckLeftNeighbour(void* ptr) {
+
+    Mem_Block* ChunkToFree = (Mem_Block*)ptr - 1;
+    ChunkToFree->isFree = 1;
+
+    // Checking if the left neighbour is available for use
+    Mem_Block* Left_Neighbour = heap_start;
+
+    while (Left_Neighbour != NULL) {
+        if (Left_Neighbour->pNext == ChunkToFree && Left_Neighbour->isFree == 1 && ChunkToFree->isFree == 1) {
+            Left_Neighbour->Size_Alloc = Left_Neighbour->Size_Alloc + ChunkToFree->Size_Alloc + HEADER_SIZE;
+            Left_Neighbour->pNext = ChunkToFree->pNext;
+            return;
+        }
+        Left_Neighbour = Left_Neighbour->pNext;
+    }
 }
