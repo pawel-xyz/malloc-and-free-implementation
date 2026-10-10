@@ -5,13 +5,15 @@ A custom implementation of the standard C library memory allocation functions (`
 ## *Table of Contents*
 
 * [Understanding Computer Memory](#Understanding-computer-memory)
-  * [What are `malloc` and `free`?](#what-are-malloc-and-free)
-* [Memory Implementation as a Singly Linked List](#memory-implementation-as-a-singly-linked-list)
-  * [Allocation (`my_malloc`)](#allocation-my_malloc)
-  * [Deallocation (`my_free`)](#deallocation-my_free)
+  * [What is `malloc` and `free`?](#what-is-malloc-and-free)
+* [Memory Implementation as a Singly Linked List](#-memory-implementation-as-a-singly-linked-list)
+   * [The Initial Heap, Program Break, and sbrk()](#the-initial-heap-program-break-and-sbrk)
+   * [Metadata and why it is important (Header + Payload)](#metadata-and-why-it-is-important-header--payload)
+   * [Returning the address - how malloc handles it](#returning-the-address---how-malloc-handles-it)
 * [Key Helper Functions](#Key-helper-functions)
-  * [`AlignBytes` – Data Alignment](#1-alignbytessize_t-size--data-alignment)
-  * [`Block_Splitting` – Preventing Internal Fragmentation](#2-block_splittingsize_t-size-mem_block-blockfound--preventing-internal-fragmentation)
+  * [`AlignBytes` – Data Alignment](#alignbytessize_t-size--data-alignment)
+  * [Internal and External Fragmentation](#internal-and-external-fragmentation)
+  * [`Block_Splitting` – Preventing Internal Fragmentation](#block_splittingsize_t-size-mem_block-blockfound--preventing-internal-fragmentation)
 * [Free Block Search Algorithms](#free-block-search-algorithms)
 
 # *Understanding Computer Memory*
@@ -32,14 +34,31 @@ If we would want to visualise this concept it would look something like this :
 ## *What is malloc() and free() ?* 
 malloc() and free() are basic C functions used by a programmer to both manually allocate memory and then deallocate it. Both of these functions are included in `<stdlib.h>` which is a standard library in C programming language.
 
-### *The structure of malloc() and free()`* : 
-* `void* malloc( size_t size );`
+### *The structure of malloc() and free()* : 
+`void* malloc( size_t size );`
   
 -> `void*` means that `malloc()` returns pointer to void. That makes perfect sense because the only job of `malloc()` function is to retrieve a specified number of bytes from the operating system and reserve them in memory. This function does not know WHAT type of data is stored at that address. Let's assume that `malloc()` doesn't return void*. The people who created C would have to create special `malloc()` functions for every data type (e.g. `int* malloc_int(size_t size)`).
 -> `size_t` is a special data type (size_t, "size" it's just a variable name) used to represent object size in bytes. A memory size can never be negative. For this reason, `size_t` is an unsigned integer type (it does not accept values ​​less than zero). This allows the available range of bits to be fully utilized for specifying memory size. The other very important thing is that size_t is platform dependent which means that on 32-bit systems it's size is 32 bits (4 bytes) and on 64-bit systems it's 64 bits (8 bytes).
 
-* `void free( void* ptr );` This function is pretty simple, it doesn't return anything (void) and takes one argument - a pointer to a previously allocated memory. Notice how `ptr` only stores address of memory that we want to free, however it doesn't include information of HOW many bytes are allocated meaning that it "technically" shouldn't be able to free the right amount. We will cover this in section :[Memory Implementation as a Singly Linked List](#memory-implementation-as-a-singly-linked-list)
+`void free( void* ptr );` This function is pretty simple, it doesn't return anything (void) and takes one argument - a pointer to a previously allocated memory. Notice how `ptr` only stores address of memory that we want to free, however it doesn't include information of HOW many bytes are allocated meaning that it "technically" shouldn't be able to free the right amount. We will cover this in section :[Memory Implementation as a Singly Linked List](#memory-implementation-as-a-singly-linked-list)
 
 # *Memory Implementation as a Singly Linked List*
-Now that we know what is a heap let's try to implem
+The operating system sees the heap as a huge "box" of bytes to know which parts of the "box" are occupied and which are free, we use a **singly linked list** structure. But before we can link anything, we need to understand how we actually get memory from the OS.
 
+### The Initial Heap, Program Break, and sbrk()
+
+When a C program starts, the initial size of the heap is exactly **0 bytes**. It doesn't exist yet. 
+
+The operating system keeps track of the top boundary of your program's data segment using a special pointer called the **program break** (or simply *brk*).Everything **below** the program break is memory that your program has been granted and can safely use. Everything **above** the program break belongs to the OS. If our program tries to touch it, the Operating System will immediately terminate it with a *Segmentation Fault*. Let's go back to the previous image covered in [Understanding Computer Memory](#Understanding-computer-memory) but now lets add **program break** to it : 
+
+<img width="1024" height="509" alt="image" src="https://github.com/user-attachments/assets/223dc7c5-955a-4600-a8e0-8eaa79ec38da" />
+
+
+To ask the OS for memory (which means pushing program brake "up") our allocator uses a system call wrapper named `sbrk()` (set break):
+* `sbrk(0)`: Returns the current address of the program break without changing it.
+* `sbrk(size)`: Moves the program break up by `size` bytes, effectively growing the heap. 
+
+**!!!** When you call `sbrk(size)`, it returns the **old** program break address. This is incredibly convenient because this old address is exactly where our newly allocated chunk of memory begins! We can immediately cast this raw memory address into our Metadata structure (Header) and append it to our linked list.
+
+### Metadata and why it is important (Header + Payload)
+Let's say that we want to allocate 24 bytes of memory, naturally we type `malloc(24)` which means that the system allocated exactly 24 bytes right? Not quite, to understand why we need to go back to section [The structure of malloc() and free()](#the-structure-of-malloc()-and-free()). There we talked how `free()` function shouldn't be able to know how many bytes of memory to free. Now we can clearly see how it's possible. The 
