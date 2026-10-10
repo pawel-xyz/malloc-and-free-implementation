@@ -29,6 +29,7 @@ The RAM is divided into couple different segments :
   * **Stack** : Used for static memory allocation. It automatically manages local variables, function parameters, and control flow. While operations on the stack are very fast, its size is strictly fixed and small.
 
 If we would want to visualise this concept it would look something like this : 
+
 <img width="1024" height="509" alt="image" src="https://github.com/user-attachments/assets/e046aae7-a62c-43fa-bb67-4d5aabd981ad" />
 
 ## *What is malloc() and free() ?* 
@@ -61,4 +62,32 @@ To ask the OS for memory (which means pushing program brake "up") our allocator 
 **!!!** When you call `sbrk(size)`, it returns the **old** program break address. This is incredibly convenient because this old address is exactly where our newly allocated chunk of memory begins! We can immediately cast this raw memory address into our Metadata structure (Header) and append it to our linked list.
 
 ### Metadata and why it is important (Header + Payload)
-Let's say that we want to allocate 24 bytes of memory, naturally we type `malloc(24)` which means that the system allocated exactly 24 bytes right? Not quite, to understand why we need to go back to section [The structure of malloc() and free()](#the-structure-of-malloc()-and-free()). There we talked how `free()` function shouldn't be able to know how many bytes of memory to free. Now we can clearly see how it's possible. The 
+Let's say that we want to allocate 24 bytes of memory, naturally we type `malloc(24)` which means that the system allocated exactly 24 bytes right? Not quite, to understand why we need to go back to section [The structure of malloc() and free()](#the-structure-of-malloc()-and-free()). There we talked how `free()` function shouldn't be able to know how many bytes of memory is there to free. When we call `malloc(24)` the OS reservers a bit more than 24 bytes, because right before our data (Payload), it has to hide a secret structure with information, the so-called **Metadata (Header)**. The Header stores critical information: how big the block is, whether it is free, and a pointer to the next memory block on the heap.
+In this project, the Header looks like this:
+
+```c
+typedef struct Mem_Block {
+    size_t Size_Alloc;       // Size of the block
+    int isFree;              // 1 = free, 0 = allocated
+    struct Mem_Block* pNext; // Address of the next block
+} Mem_Block;
+```
+
+So the total amount of bytes reserved can be calculated : *TotalSize = 24 bytes + sizeof(Mem_Block)* 
+
+<img width="1024" height="572" alt="image" src="https://github.com/user-attachments/assets/6c842adc-44c0-4af3-9364-5a2e2881d136" />
+
+
+### Returning the address - how malloc handles it
+If `malloc` returned the address of the very beginning of the block (where the Header is), the user would immediately overwrite the metadata with their own data! To prevent this, a specific pointer arithmetic operation is used.
+
+Internally, `malloc` uses two levels of management:
+
+1. It operates on `Mem_Block*` pointers to modify list parameters and ask the system for memory (using the `sbrk` function).
+2. When returning the result to the user, the pointer is shifted **past the metadata**.
+
+In the code, this is implemented by a simple instruction: `return current + 1;`
+Adding "1" to a pointer of type `Mem_Block*` shifts the address to the right by exactly the size of the Header structure, landing perfectly at the beginning of the Payload section.
+
+# Key Helper Functions
+If we want to implement our own `malloc()` why is there any need for "Helper Functions" ? Managing memory comes with  
