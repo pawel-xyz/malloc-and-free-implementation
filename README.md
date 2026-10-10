@@ -26,3 +26,15 @@ The RAM is divided into couple different segments :
   * **Uninitialized Data Segment** : This is the place for uninitialized global and static variables.
   * **Heap** : Used for dynamic memory allocation. This is an unorganized pool of memory utilized when the exact memory requirement is unknown at compile time (e.g., handling dynamic arrays or user inputs). The programmer is fully responsible for manually requesting and releasing heap memory.
   * **Stack** : Used for static memory allocation. It automatically manages local variables, function parameters, and control flow. While operations on the stack are very fast, its size is strictly fixed and small.
+
+If we would want to visualise this concept it would look something like this : 
+<img width="1024" height="509" alt="image" src="https://github.com/user-attachments/assets/e046aae7-a62c-43fa-bb67-4d5aabd981ad" />
+
+## *What is malloc() and free() ?* 
+malloc() and free() are basic C functions used by a programmer to both manually allocate memory and then deallocate it. Both of these functions are included in `<stdlib.h>` which is a standard library in C programming language.
+
+### *The structure of malloc() and free()`* : 
+* `void* malloc( size_t size );`
+ * void* means that `malloc()` returns pointer to void. That makes perfect sense because the only job of `malloc()` function is to retrieve a specified number of bytes from the operating system and reserve them in memory. This function does not know WHAT type of data is stored at that address. Let's assume that `malloc()` doesn't return void*. The people who created C would have to create special `malloc()` functions for every data type (e.g. `int* malloc_int(size_t size)`).
+  * size_t is a special data type (size_t, "size" it's just a variable name) used to represent object size in bytes. A memory size can never be negative. For this reason, `size_t` is an unsigned integer type (it does not accept values ​​less than zero). This allows the available range of bits to be fully utilized for specifying memory size. The other very important thing is that size_t is platform dependent which means that on 32-bit systems it's size is 32 bits (4 bytes) and on 64-bit systems it's 64 bits (8 bytes)
+
