@@ -78,7 +78,6 @@ typedef struct Mem_Block {
 So the total amount of bytes reserved can be calculated by simple equation: 
                                  *TotalSize = Amount of bytes called by user + sizeof(Mem_Block)*                           
 
-<img width="1024" height="572" alt="image" src="https://github.com/user-attachments/assets/6c842adc-44c0-4af3-9364-5a2e2881d136" />
 
 
 ### *Returning the address - how malloc handles it*
