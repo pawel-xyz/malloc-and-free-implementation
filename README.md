@@ -101,7 +101,7 @@ A CPU (Central Processing Unit) does not read memory byte-by-byte. It fetches me
 
 Our repository will cover two different ways to calculate memory alignment to demonstrate the difference in their efficiency:
 
-1. *The "Modulo" Way*
+1. *The "Modulo" Way* (Also included in the implementation)
 
    This method relies on standard arithmetic operations (addition, division, and the modulo `%` operator). It mathematically checks if the requested size is a multiple of the alignment requirement, and if not, calculates the exact remainder to add the necessary padding bytes.
    * *Efficiency:* Low. Division and modulo are mathematically intuitive but computationally expensive. They are among the slowest instructions for a CPU's ALU (Arithmetic Logic Unit) to execute, often taking couple of clock cycles.
